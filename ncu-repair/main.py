@@ -1,4 +1,7 @@
 import requests,base64,random
+# see here http://bx.houqinbao.com/wechat/studentManage?universityId=gh_ec0a68e01670&openid=ozqQ153zsEByV5cN3G44VqBJpvhss
+# 不同的openid进入即可（可以看成是不同的用户）
+
 
 repair_site = {
 	'b1':'d0eded70a0c4be215bd46bbb1d940d6d',#前湖北院学生公寓
@@ -246,22 +249,21 @@ inside_data = {
 
 
 
-
-def get_coki():#获取cookie数据
+#获取cookie数据
+def get_coki(openid=None):
 	pass
 	# url = 'http://bx.houqinbao.com/wechat/studentManage?universityId=gh_d65169064330&openid=21321232'
-	url = 'http://bx.houqinbao.com/wechat/studentManage?universityId=gh_ec0a68e01670&openid=1322333246'
+	url = 'http://bx.houqinbao.com/wechat/studentManage?universityId=gh_ec0a68e01670&openid={}'.format(openid)
 	bd_session = requests.Session()
 	what = bd_session.get(url)
 	# response = requests.get(url)
 	cookii = requests.utils.dict_from_cookiejar(what.cookies)
 	return cookii
-
-header =get_coki()
-# print(header)
-
+header = get_coki()
+#上传图片
 def post_img(base64code):
 	pass
+	header = get_coki()
 	url = 'http://bx.houqinbao.com/aliyuntest/updateImg'
 	imgdata = {}
 	imgdata['image'] = 'data:image/jpeg;base64,'+str(base64code)[2:-1]
@@ -269,7 +271,7 @@ def post_img(base64code):
 	random_name = random.sample(strlist,32)
 	name = ''.join(random_name)+'.png'
 	imgdata['name'] = name
-	response = requests.post(url,headers=header,data=imgdata)
+	response = requests.post(url,data=imgdata)
 	# print(imgdata)
 	if '成功' in response.text:
 		return response.text
@@ -278,32 +280,36 @@ def post_img(base64code):
 	else:
 		return 3#'网络异常，稍后再试'
 
+#报修 成功 返回1 ,失败 返回2
 def post_repair(openid,area1,area2,area3,pj1,pj2,detail,myname,myphone,base64code):#报修
-	set_img = post_img(base64code)
+	set_img = (post_img(base64code))
 	if set_img is not 2 or 3:
 		img_re_dic = eval(set_img)
 		picURL = img_re_dic['data']
 		data = {
 			'openid':'{}'.format(openid),#url后面的
 			'subOpenid':'',
-			'universityId':'gh_ec0a68e01670',#学校id,url里面也有
+			'universityId':'gh_ec0a68e01670',#'gh_ec0a68e01670',#学校id,url里面也有
 			'repairArea':'{},{}'.format(area1,area2),#维修区域，需要选择
 			'repairAddress':'{}'.format(area3),#我的地址1
 			'repairProject':'{},{}'.format(pj1,pj2),#维修项目
 			'repairContent':'{}'.format(detail),#报修详情
+			'appointmentTime':'' ,
 			'repairMan':'{}'.format(myname),#报修人姓名
 			'repairManPhone':'{}'.format(myphone),#报修人手机
 			'picURL':picURL
 		}
 		url = 'http://bx.houqinbao.com/bxForm/addBx'
+		header = get_coki(openid)
 		response = requests.post(url,headers=header,data=data)
 		if '"msg":"成功"' in response.text:
-			# print(response.text)
+			print(response.text)
 			return 1
 	else:
 		return 2
 
-def see_data(openid):#获取报修状况
+#获取报修状况
+def see_data(openid):
 	pass
 	url = 'http://bx.houqinbao.com/bxUser/wxRepairList'
 	header1 = get_coki()
@@ -342,6 +348,7 @@ def see_data(openid):#获取报修状况
 	#print(all_list)
 	return all_list
 
+#取消报修
 def cancel(openid,repairid):
 	pass
 	url1 = 'http://bx.houqinbao.com/bxUser/updateToCancel'
@@ -371,18 +378,15 @@ image= file.read()
 file.close()
 imgcode = base64.b64encode(image)
 
+post_repair('ozqQ153zsEByV5cN3G44VqBJpvhss','20ac8882e667dbb22b5eaa24d6d3d040','11084','999','16441','16442','testdetial','我我','11156549888',imgcode)
+idd = see_data('ozqQ153zsEByV5cN3G44VqBJpvhss')[0][0] #最近的一个工单
+cancel('ozqQ153zsEByV5cN3G44VqBJpvhss',idd)#取消最近一个工单
 
 
-post_repair('ozqQ153zsEByV5cN3G44VqBJpvhss','d0eded70a0c4be215bd46bbb1d940d6d','2307','999',"11499","11508",'nodetail','myname','11156549999',imgcode)
-
-idd = see_data('ozqQ153zsEByV5cN3G44VqBJpvhss')[0][0]
-cancel('ozqQ153zsEByV5cN3G44VqBJpvhss',idd)
-
-
-# 去这里看：http://bx.houqinbao.com/wechat/orderDetails?universityId=gh_ec0a68e01670&repairId=0fdc83dc00ccc59e88284514b4501aa1&openid=ozqQ153zsEByV5cN3G44VqBJpvhss&subOpenid=&repairCode=Bx4739201807285689
-
+# 好叭 确切的说应该是这里看 http://bx.houqinbao.com/wechat/studentManage?universityId=gh_ec0a68e01670&openid=ozqQ153zsEByV5cN3G44VqBJpvhss
 
 '''
+前端提交的表单
 {'repairTime': '2018-07-26 20:13:30',
  'repairAddress': '前湖南院其他楼栋（医）-第一实验大楼-1111', 
  'repairMan': '1111',
