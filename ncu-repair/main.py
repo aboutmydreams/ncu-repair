@@ -251,22 +251,17 @@ inside_data = {
 
 #获取cookie数据
 def get_coki(openid=None):
-	pass
 	# url = 'http://bx.houqinbao.com/wechat/studentManage?universityId=gh_d65169064330&openid=21321232'
-	url = 'http://bx.houqinbao.com/wechat/studentManage?universityId=gh_ec0a68e01670&openid={}'.format(openid)
+	url = f'http://bx.houqinbao.com/wechat/studentManage?universityId=gh_ec0a68e01670&openid={openid}'
 	bd_session = requests.Session()
 	what = bd_session.get(url)
-	# response = requests.get(url)
-	cookii = requests.utils.dict_from_cookiejar(what.cookies)
-	return cookii
+	return requests.utils.dict_from_cookiejar(what.cookies)
 header = get_coki()
 #上传图片
 def post_img(base64code):
-	pass
 	header = get_coki()
 	url = 'http://bx.houqinbao.com/aliyuntest/updateImg'
-	imgdata = {}
-	imgdata['image'] = 'data:image/jpeg;base64,'+str(base64code)[2:-1]
+	imgdata = {'image': f'data:image/jpeg;base64,{str(base64code)[2:-1]}'}
 	strlist = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'm', 'n', 'p', 'r', 's', 't', 'w', 'x', 'y', 'z', '2', '3', '4', '5', '6', '7', '8']
 	random_name = random.sample(strlist,32)
 	name = ''.join(random_name)+'.png'
@@ -283,88 +278,72 @@ def post_img(base64code):
 #报修 成功 返回1 ,失败 返回2
 def post_repair(openid,area1,area2,area3,pj1,pj2,detail,myname,myphone,base64code):#报修
 	set_img = (post_img(base64code))
-	if set_img is not 2 or 3:
-		img_re_dic = eval(set_img)
-		picURL = img_re_dic['data']
-		data = {
-			'openid':'{}'.format(openid),#url后面的
-			'subOpenid':'',
-			'universityId':'gh_ec0a68e01670',#'gh_ec0a68e01670',#学校id,url里面也有
-			'repairArea':'{},{}'.format(area1,area2),#维修区域，需要选择
-			'repairAddress':'{}'.format(area3),#我的地址1
-			'repairProject':'{},{}'.format(pj1,pj2),#维修项目
-			'repairContent':'{}'.format(detail),#报修详情
-			'appointmentTime':'' ,
-			'repairMan':'{}'.format(myname),#报修人姓名
-			'repairManPhone':'{}'.format(myphone),#报修人手机
-			'picURL':picURL
-		}
-		url = 'http://bx.houqinbao.com/bxForm/addBx'
-		header = get_coki(openid)
-		response = requests.post(url,headers=header,data=data)
-		if '"msg":"成功"' in response.text:
-			print(response.text)
-			return 1
-	else:
-		return 2
+	img_re_dic = eval(set_img)
+	picURL = img_re_dic['data']
+	data = {
+	    'openid': f'{openid}',
+	    'subOpenid': '',
+	    'universityId': 'gh_ec0a68e01670',
+	    'repairArea': f'{area1},{area2}',
+	    'repairAddress': f'{area3}',
+	    'repairProject': f'{pj1},{pj2}',
+	    'repairContent': f'{detail}',
+	    'appointmentTime': '',
+	    'repairMan': f'{myname}',
+	    'repairManPhone': f'{myphone}',
+	    'picURL': picURL,
+	}
+	url = 'http://bx.houqinbao.com/bxForm/addBx'
+	header = get_coki(openid)
+	response = requests.post(url,headers=header,data=data)
+	if '"msg":"成功"' in response.text:
+		print(response.text)
+		return 1
 
 #获取报修状况
 def see_data(openid):
-	pass
 	url = 'http://bx.houqinbao.com/bxUser/wxRepairList'
 	header1 = get_coki()
 	data = {
-		# 'openid':'21321232',
-		# 'universityId':'gh_d65169064330',#测试大学
-		'openid':'{}'.format(openid),#'ozqQzszsEByV5cN3GbIVqBJpvhss',
-		'universityId':'gh_ec0a68e01670',#南大
-		'currentPage':'1',
-		'pageSize':'10'
+	    'openid': f'{openid}',
+	    'universityId': 'gh_ec0a68e01670',
+	    'currentPage': '1',
+	    'pageSize': '10',
 	}
 	what = requests.post(url,headers=header1,data=data)
 	lists = eval(what.text)
-	# print(lists)
-	all_list = []
 	id_list = []
 	tittle_list = []
 	content_list = []
-	for i in range(0,len(lists['data']['list'])):
-		pass
+	for i in range(len(lists['data']['list'])):
 		id_list.append(str(lists['data']['list'][i]['id']))
 		address = str(lists['data']['list'][i]['repairAddress'])
 		project = str(lists['data']['list'][i]['repairProjectName'])
 		content = str(lists['data']['list'][i]['repairContent'])
 		tittle = address[address.index('-')+1:].replace('-','·')+'·'+project[project.index('-')+1:].replace('-','·')
 		if len(tittle)>13:
-			pass
 			tittle = address[address.index('-')+1:][address.index('-')+1:]+'·'+project[project.index('-')+1:].replace('-','·')
 		tittle_list.append(tittle)
 		if len(content)>27:
-			content = content[:26]+'…'
+			content = f'{content[:26]}…'
 		content_list.append(content)
-	all_list.append(id_list)
-	all_list.append(tittle_list)
-	all_list.append(content_list)
 	#print(all_list)
-	return all_list
+	return [id_list, tittle_list, content_list]
 
 #取消报修
 def cancel(openid,repairid):
-	pass
 	url1 = 'http://bx.houqinbao.com/bxUser/updateToCancel'
 	url2 = 'http://bx.houqinbao.com/bxFormStatus/wxFind'
 
 	data1 = {
-		#'universityId':'gh_d65169064330',#测试id
-		'universityId':'gh_ec0a68e01670',#我们学校id
-		'openid':'{}'.format(openid),#'21321232',#尾部url
-		'id':'{}'.format(repairid)#repairID
+	    'universityId': 'gh_ec0a68e01670',
+	    'openid': f'{openid}',
+	    'id': f'{repairid}',
 	}
 	data2 = {
-		#'universityId':'gh_d65169064330',
-		'universityId':'gh_ec0a68e01670',#学校id
-		'repairId':'{}'.format(repairid),
-		'openid':'{}'.format(openid),
+	    'universityId': 'gh_ec0a68e01670',
+	    'repairId': f'{repairid}',
+	    'openid': f'{openid}',
 	}
 	res1 = requests.post(url1,headers=header,data=data1)
 	res2 = requests.post(url2,headers=header,data=data2)
